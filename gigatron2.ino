@@ -52,6 +52,7 @@ const char* ssid = "mikesnet";
 const char* password = "springchicken";
 unsigned long millisBlynk, millisTemp, millisPage;
 bool onwrongpage = false;
+bool invertDisplay = false;
 int buttoncounter;
 int hours, mins, secs;
 int savecount;
@@ -359,6 +360,16 @@ BLYNK_WRITE(V0) {
     terminal.print("ProbeTemp: ");
     terminal.print(temperatureC);
   }
+  if (String("invert") == param.asStr()) {
+    invertDisplay = !invertDisplay;
+        if (invertDisplay) {
+          u8g2.sendF("c", 0x0a7);
+          terminal.println("Display inverted.");
+        } else {
+          u8g2.sendF("c", 0x0a6);
+          terminal.println("Display normal.");
+        }
+      }
   if (String("reset") == param.asStr()) {
     terminal.println("Restarting...");
     terminal.flush();
@@ -1169,6 +1180,7 @@ else if (menuState == MENU_EDIT_SET_TIME_MIN) {
     }
 }
 
+
   if ((shtTemp < setTemp) && (shtTemp > 0)) {
     ssrState = true;
     digitalWrite(pinSSR, HIGH);
@@ -1282,6 +1294,7 @@ else if (menuState == MENU_EDIT_SET_TIME_MIN) {
   }
   
   every (30000) {
+    if (hours == 12 && mins == 00) {u8g2.sendF("c", 0x0a7); invertDisplay = true;} else if  (hours == 00 && mins == 00) {invertDisplay = false; u8g2.sendF("c", 0x0a6);}
     shtTemp = sht31.readTemperature();
     shtHum = sht31.readHumidity();
     absHum = (6.112 * pow(2.71828, ((17.67 * shtTemp) / (shtTemp + 243.5))) * shtHum * 2.1674) / (273.15 + shtTemp);
